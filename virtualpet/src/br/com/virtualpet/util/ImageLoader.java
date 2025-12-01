@@ -2,6 +2,7 @@ package br.com.virtualpet.util;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -24,8 +25,7 @@ public class ImageLoader {
             return imageCache.get(path);
         }
         
-        try {
-            InputStream inputStream = ImageLoader.class.getResourceAsStream(path);
+        try (InputStream inputStream = ImageLoader.class.getResourceAsStream(path)) {
             if (inputStream != null) {
                 BufferedImage image = ImageIO.read(inputStream);
                 imageCache.put(path, image);
@@ -60,10 +60,15 @@ public class ImageLoader {
         BufferedImage original = loadImage(path);
         if (original != null) {
             BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            scaled.getGraphics().drawImage(
-                original.getScaledInstance(width, height, Image.SCALE_SMOOTH),
-                0, 0, null
-            );
+            Graphics g = scaled.getGraphics();
+            try {
+                g.drawImage(
+                    original.getScaledInstance(width, height, Image.SCALE_SMOOTH),
+                    0, 0, null
+                );
+            } finally {
+                g.dispose();
+            }
             return scaled;
         }
         return null;
